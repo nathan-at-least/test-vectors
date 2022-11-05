@@ -1,2 +1,10 @@
 [workspace]
-members = []
+members = [
+  "test-vectors",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license-file = "LICENSE"
+repository = "https://github.com/nathan-at-least/test-vectors"
