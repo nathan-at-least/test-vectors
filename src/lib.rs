@@ -1,4 +1,5 @@
-// mod params;
+pub(crate) mod error;
+pub(crate) mod params;
 mod transform;
 
 use proc_macro::TokenStream;
