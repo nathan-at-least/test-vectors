@@ -1,10 +1,21 @@
-[workspace]
-members = [
-  "test-vectors",
-]
-
-[workspace.package]
+[package]
+name = "test-vectors"
 version = "0.1.0"
 edition = "2021"
 license-file = "LICENSE"
 repository = "https://github.com/nathan-at-least/test-vectors"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.47"
+quote = "1.0.21"
+
+[workspace.dependencies.syn]
+version = "1.0.103"
+features = [
+  "full",
+]
