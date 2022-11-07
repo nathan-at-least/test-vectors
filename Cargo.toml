@@ -11,10 +11,12 @@ repository = "https://github.com/nathan-at-least/test-vectors"
 proc-macro = true
 
 [dependencies]
+darling = "0.14.2"
+derive_more = "0.99.17"
 proc-macro2 = "1.0.47"
 quote = "1.0.21"
 
-[workspace.dependencies.syn]
+[dependencies.syn]
 version = "1.0.103"
 features = [
   "full",
