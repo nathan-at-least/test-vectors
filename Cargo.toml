@@ -1,23 +1,5 @@
-[package]
-name = "test-vectors"
-version = "0.1.0"
-edition = "2021"
-license-file = "LICENSE"
-repository = "https://github.com/nathan-at-least/test-vectors"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[lib]
-proc-macro = true
-
-[dependencies]
-darling = "0.14.2"
-derive_more = "0.99.17"
-proc-macro2 = "1.0.47"
-quote = "1.0.21"
-
-[dependencies.syn]
-version = "1.0.103"
-features = [
-  "full",
+[workspace]
+members = [
+  "macro",
+  "test-vectors",
 ]
