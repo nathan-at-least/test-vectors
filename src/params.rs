@@ -1,17 +1,40 @@
 use crate::error::Result;
 use darling::FromMeta;
 use proc_macro2::TokenStream;
+use std::path::PathBuf;
+
+#[derive(Debug)]
+pub(crate) struct MacroParams {
+    pub(crate) dir: PathBuf,
+}
 
 #[derive(Debug, FromMeta)]
-pub(crate) struct MacroParams {
-    pub(crate) dir: String,
+struct RawMacroParams {
+    dir: String,
 }
 
 impl MacroParams {
     pub(crate) fn parse(tokens: TokenStream) -> Result<Self> {
+        use std::path::Path;
+        use syn::spanned::Spanned;
+
+        let span = tokens.span();
         let args = parse_attribute_args(tokens)?;
-        let params = Self::from_list(&args)?;
-        Ok(params)
+        let raw = RawMacroParams::from_list(&args)?;
+
+        let manifestdir = std::env::var("CARGO_MANIFEST_DIR").map_err(|e| {
+            syn::Error::new(
+                span,
+                format!(
+                    "could not access CARGO_MANIFEST_DIR from environment: {}",
+                    e
+                ),
+            )
+        })?;
+
+        let dir = Path::new(&manifestdir).join(raw.dir);
+
+        Ok(MacroParams { dir })
     }
 }
 
