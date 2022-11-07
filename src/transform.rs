@@ -29,6 +29,9 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
     implfn.sig.ident = syn::Ident::new(&format!("impl_{}", &basename), implfn.sig.ident.span());
     let implname = &implfn.sig.ident;
 
+    // Save the return type to propagate it:
+    let tyret = &implfn.sig.output;
+
     let argnames = parse_fn_arg_names(&implfn.sig).map_err(|s| syn::Error::new(spaninput, s))?;
     let casenames = list_dir(&params.dir).map_err(|e| syn::Error::new(spanargs, e.to_string()))?;
 
@@ -41,10 +44,10 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
 
         casefns.push(quote! {
             #[test]
-            fn #casefnname() {
+            fn #casefnname() #tyret {
                 #implname(
                     #( include_bytes!( #argpaths ) ),*
-                );
+                )
             }
         });
     }
