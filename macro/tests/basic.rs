@@ -1,7 +1,7 @@
 use std::cmp::PartialEq;
 use std::ops::Deref;
 use std::str::Utf8Error;
-use test_vectors::test_vectors;
+use test_vectors_macro::test_vectors;
 
 #[test_vectors(dir = "tests/basic")]
 fn replace_spaces_with_underscore(input: &[u8], expected: &[u8]) {
