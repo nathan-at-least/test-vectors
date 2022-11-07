@@ -13,7 +13,7 @@ where
 }
 
 fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStream> {
-    use crate::fnargs::parse_fn_arg_names;
+    use crate::fnargs::parse_fn_args;
     use crate::listdir::list_dir;
     use crate::params::MacroParams;
     use quote::quote;
@@ -32,7 +32,8 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
     // Save the return type to propagate it:
     let tyret = &implfn.sig.output;
 
-    let argnames = parse_fn_arg_names(&implfn.sig).map_err(|s| syn::Error::new(spaninput, s))?;
+    let (argnames, argtypes) =
+        parse_fn_args(&implfn.sig).map_err(|s| syn::Error::new(spaninput, s))?;
     let casenames = list_dir(&params.dir).map_err(|e| syn::Error::new(spanargs, e.to_string()))?;
 
     let mut casefns = vec![];
@@ -46,7 +47,11 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
             #[test]
             fn #casefnname() #tyret {
                 #implname(
-                    #( include_bytes!( #argpaths ) ),*
+                    #(
+                        <#argtypes>::try_from(
+                            &include_bytes!( #argpaths )[..]
+                        ).unwrap()
+                    ),*
                 )
             }
         });
