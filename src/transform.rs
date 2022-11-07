@@ -14,13 +14,43 @@ where
 
 fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStream> {
     use crate::fnargs::parse_fn_arg_names;
+    use crate::listdir::list_dir;
     use crate::params::MacroParams;
+    use quote::quote;
     use syn::spanned::Spanned;
 
     let span = input.span();
     let params = MacroParams::parse(args)?;
-    let implfn: syn::ItemFn = syn::parse2(input)?;
-    let _basename = implfn.sig.ident.to_string();
+    let mut implfn: syn::ItemFn = syn::parse2(input)?;
+
+    // Save the impl fn name and rename it:
+    let basename = implfn.sig.ident.to_string();
+    implfn.sig.ident = syn::Ident::new(&format!("impl_{}", &basename), implfn.sig.ident.span());
+    let implname = &implfn.sig.ident;
+
     let argnames = parse_fn_arg_names(&implfn.sig).map_err(|s| syn::Error::new(span, s))?;
-    todo!("dir: {:?}, argnames: {:?}", params.dir.display(), argnames);
+    let casenames = list_dir(&params.dir).map_err(|e| syn::Error::new(span, e.to_string()))?;
+
+    let mut casefns = vec![];
+    for casename in casenames {
+        let casefnname = format!("{}_{}", &basename, &casename);
+        let argpaths = argnames
+            .iter()
+            .map(|arg| params.dir.join(&casename).join(arg).display().to_string());
+
+        casefns.push(quote! {
+            #[test]
+            fn #casefnname() {
+                #implname(
+                    #( include_bytes!( #argpaths ) ),*
+                );
+            }
+        });
+    }
+
+    Ok(quote! {
+        #implfn
+
+        #( #casefns )*
+    })
 }
