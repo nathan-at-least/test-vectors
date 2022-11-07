@@ -19,7 +19,8 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
     use quote::quote;
     use syn::spanned::Spanned;
 
-    let span = input.span();
+    let spanargs = args.span();
+    let spaninput = input.span();
     let params = MacroParams::parse(args)?;
     let mut implfn: syn::ItemFn = syn::parse2(input)?;
 
@@ -28,12 +29,12 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
     implfn.sig.ident = syn::Ident::new(&format!("impl_{}", &basename), implfn.sig.ident.span());
     let implname = &implfn.sig.ident;
 
-    let argnames = parse_fn_arg_names(&implfn.sig).map_err(|s| syn::Error::new(span, s))?;
-    let casenames = list_dir(&params.dir).map_err(|e| syn::Error::new(span, e.to_string()))?;
+    let argnames = parse_fn_arg_names(&implfn.sig).map_err(|s| syn::Error::new(spaninput, s))?;
+    let casenames = list_dir(&params.dir).map_err(|e| syn::Error::new(spanargs, e.to_string()))?;
 
     let mut casefns = vec![];
     for casename in casenames {
-        let casefnname = format!("{}_{}", &basename, &casename);
+        let casefnname = syn::Ident::new(&format!("{}_{}", &basename, &casename), spanargs);
         let argpaths = argnames
             .iter()
             .map(|arg| params.dir.join(&casename).join(arg).display().to_string());
