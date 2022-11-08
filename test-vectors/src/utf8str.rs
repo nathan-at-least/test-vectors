@@ -6,13 +6,15 @@ use std::str::Utf8Error;
 ///
 /// A `Utf8Str<'a>` should behave identically to `&'a str` except it implements
 /// `TryFrom<&[u8]>` with UTF-8 decoding.  This provides a convenient short hand for
-/// [macro@test_vectors](crate::test_vectors) tests which operate on strings, rather than bytes.
+/// [test_vectors](crate::test_vectors) tests which operate on strings, rather than bytes.
 ///
 /// # Example
 ///
-/// ```ignore
-/// #[test_vectors(dir = "tests/basic")]
-/// fn test_replace_spaces(input: Utf8Str<'static>, expected: Utf8Str<'static>) {
+/// ```
+/// use test_vectors::{test_vectors, Utf8Str};
+///
+/// #[test_vectors(dir = "test-data")]
+/// fn utf8str_test_replace_spaces(input: Utf8Str<'static>, expected: Utf8Str<'static>) {
 ///     let output = input.replace(' ', "_");
 ///     assert_eq!(expected, output);
 /// }
