@@ -8,7 +8,10 @@
 //!
 //! # Example
 //!
-//! Suppose a crate includes the following contents:
+//! Suppose we have a fancy-dancy crate which can replace spaces with hyphens in a string, and we
+//! want to test that functionality against a bunch of input vector files.
+//!
+//! We can organize the crate contents like this:
 //!
 //! - `Cargo.toml` - depending on [test-vectors](crate) in `[dev-dependencies]`
 //! - `src/lib.rs` - containing the example code below
@@ -17,21 +20,28 @@
 //! - `test-data/example1/beta/input` - containing `this is beta`
 //! - `test-data/example1/beta/expected` - containing `this_is_beta`
 //!
-//! A test criterion function for replacing spaces with hyphens could be written like this:
+//! Now in our `lib.rs` we have:
 //!
 //! ```
-//! use std::str::Utf8Error;
-//! use test_vectors::test_vectors;
+//! pub fn replace_spaces_with_underscores(input: &str) -> String {
+//!     input.replace(' ', "_")
+//! }
 //!
-//! #[test_vectors(
+//! #[test_vectors::test_vectors(
 //! # doctest = true,
 //!   dir = "test-data/example1"
 //! )]
-//! fn replace_spaces_with_underscore(input: &[u8], expected: &[u8]) -> Result<(), Utf8Error> {
+//! fn test_replace(input: &[u8], expected: &[u8]) -> Result<(), std::str::Utf8Error> {
+//!     // Test setup:
 //!     let instr = std::str::from_utf8(input)?;
 //!     let expstr = std::str::from_utf8(expected)?;
-//!     let output = instr.replace(' ', "_");
+//!
+//!     // Application code test target:
+//!     let output = replace_spaces_with_underscores(instr);
+//!
+//!     // Test verification:
 //!     assert_eq!(expstr, &output);
+//!
 //!     Ok(())
 //! }
 //! ```
@@ -43,8 +53,8 @@
 //! test` will include something like this:
 //!
 //! ```text
-//! test replace_spaces_with_underscore_alpha ... ok
-//! test replace_spaces_with_underscore_beta ... ok
+//! test test_replace_alpha ... ok
+//! test test_replace_beta ... ok
 //! ```
 //!
 //! # Motivations
@@ -59,19 +69,22 @@
 //!   representations. This can help avoid divergence between live production data versus rust
 //!   literal representations aimed at representing the data.
 //! - Test against external files, which facilitates _conformance testing_
-//!   of multiple implementations against a common set of test vectors. For example, a file format
-//!   standard may include a set of test vectors which multiple implementations validate against.
+//!   of multiple implementations against a common set of test vectors. For example, a network
+//!   protocol standard may include a set of message serialization test
+//!   vectors which multiple implementations validate against.
 //! - Use other external tools on the external data files. For example,
 //!   if a video codec metadata parsing library has external test vector files, other tools for
-//!   examining that video format can be used directly on the test vectors.
+//!   examining that video format, such as interactive video players, can be used directly
+//!   on the test vectors.
 //!
 //! # Corpus and Case Directories
 //!
 //! The corpus directory is specified by the `dir` macro argument. This is a path relative to the
 //! `CARGO_MANIFEST_DIR` environment variable (which is where the crates `Cargo.toml` lives).
 //!
-//! Every directory inside a corpus directory is expected to be a case directory. Non-directories
-//! are ignored, and it's good practice to have a `README.md` file explaining the corpus.
+//! Every directory inside a corpus directory is expected to be a case directory (after
+//! traversing symlinks). Non-directories are ignored, and it's good practice to have a `README.md`
+//! file explaining the corpus.
 //!
 //! Inside a case directory, only the paths derived from the criterion function argument names are
 //! accessed, and other contents are ignored, so a good practice is a `README.md` explaining
@@ -114,6 +127,10 @@
 //!     Ok(())
 //! }
 //! ```
+//!
+//! Since both criterion functions use the same corpus and both take `input`, they are testing
+//! against the same test vector `input` files, while each function reads a different test vector
+//! for its specific functionality, ie `underscores` vs `elided`.
 //!
 //! # Automatic Input Conversion From Bytes
 //!
