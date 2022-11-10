@@ -23,7 +23,7 @@
 //! use std::str::Utf8Error;
 //! use test_vectors::test_vectors;
 //!
-//! #[test_vectors(dir = "test-data")]
+//! #[test_vectors(dir = "test-data", doctest = true)]
 //! fn replace_spaces_with_underscore(input: &[u8], expected: &[u8]) -> Result<(), Utf8Error> {
 //!     let instr = std::str::from_utf8(input)?;
 //!     let expstr = std::str::from_utf8(expected)?;
@@ -31,6 +31,9 @@
 //!     assert_eq!(expstr, &output);
 //!     Ok(())
 //! }
+//!
+//! # replace_spaces_with_underscore_alpha();
+//! # replace_spaces_with_underscore_beta();
 //! ```
 //!
 //! This creates two rust unit tests from the case directories inside the corpus directory

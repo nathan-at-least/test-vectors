@@ -43,9 +43,19 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
             .iter()
             .map(|arg| params.dir.join(&casename).join(arg).display().to_string());
 
+        let (testattr, printtestname) = if params.doctest {
+            (
+                quote! {},
+                quote! { eprintln!("doctest {} ...", stringify!(#casefnname)); },
+            )
+        } else {
+            (quote! { #[test] }, quote! {})
+        };
+
         casefns.push(quote! {
-            #[test]
+            #testattr
             fn #casefnname() #tyret {
+                #printtestname
                 #implname(
                     #(
                         <#argtypes>::try_from(
