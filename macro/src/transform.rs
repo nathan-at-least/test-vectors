@@ -43,10 +43,15 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
             .iter()
             .map(|arg| params.dir.join(&casename).join(arg).display().to_string());
 
-        let (testattr, printtestname) = if params.doctest {
+        let (testattr, execdoctest) = if params.doctest {
             (
                 quote! {},
-                quote! { eprintln!("doctest {} ...", stringify!(#casefnname)); },
+                quote! {
+                    {
+                        eprintln!("doctest test {} ...", stringify!(#casefnname));
+                        #casefnname ();
+                    }
+                },
             )
         } else {
             (quote! { #[test] }, quote! {})
@@ -55,7 +60,6 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
         casefns.push(quote! {
             #testattr
             fn #casefnname() #tyret {
-                #printtestname
                 #implname(
                     #(
                         <#argtypes>::try_from(
@@ -64,6 +68,7 @@ fn test_vectors_result(args: TokenStream, input: TokenStream) -> Result<TokenStr
                     ),*
                 )
             }
+            #execdoctest
         });
     }
 

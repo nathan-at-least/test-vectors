@@ -12,10 +12,10 @@
 //!
 //! - `Cargo.toml` - depending on [test-vectors](crate) in `[dev-dependencies]`
 //! - `src/lib.rs` - containing the example code below
-//! - `test-data/alpha/input` - containing `this is alpha`
-//! - `test-data/alpha/expected` - containing `this_is_alpha`
-//! - `test-data/beta/input` - containing `this is beta`
-//! - `test-data/beta/expected` - containing `this_is_beta`
+//! - `test-data/example1/alpha/input` - containing `this is alpha`
+//! - `test-data/example1/alpha/expected` - containing `this_is_alpha`
+//! - `test-data/example1/beta/input` - containing `this is beta`
+//! - `test-data/example1/beta/expected` - containing `this_is_beta`
 //!
 //! A test criterion function for replacing spaces with hyphens could be written like this:
 //!
@@ -23,7 +23,10 @@
 //! use std::str::Utf8Error;
 //! use test_vectors::test_vectors;
 //!
-//! #[test_vectors(dir = "test-data", doctest = true)]
+//! #[test_vectors(
+//! # doctest = true,
+//!   dir = "test-data/example1"
+//! )]
 //! fn replace_spaces_with_underscore(input: &[u8], expected: &[u8]) -> Result<(), Utf8Error> {
 //!     let instr = std::str::from_utf8(input)?;
 //!     let expstr = std::str::from_utf8(expected)?;
@@ -31,16 +34,13 @@
 //!     assert_eq!(expstr, &output);
 //!     Ok(())
 //! }
-//!
-//! # replace_spaces_with_underscore_alpha();
-//! # replace_spaces_with_underscore_beta();
 //! ```
 //!
 //! This creates two rust unit tests from the case directories inside the corpus directory
-//! `test-data`. The cases are named after the case directories `alpha` and `beta`. For each
-//! test, the file contents of the `input` and `expected` files in the case directory are
-//! mapped to the `&[u8]` test criterion function arguments. The output of `cargo test` will
-//! include something like this:
+//! `test-data/example1`. The cases are named after the case directories `alpha` and
+//! `beta`. For each test, the file contents of the `input` and `expected` files in the case
+//! directory are mapped to the `&[u8]` test criterion function arguments. The output of `cargo
+//! test` will include something like this:
 //!
 //! ```text
 //! test replace_spaces_with_underscore_alpha ... ok
@@ -78,7 +78,7 @@
 //! the intention of the case. Another nuance of this behavior is that different criterion
 //! functions might reuse the same corpus directory.
 //!
-//! For example, a case directory might have these files:
+//! For example, a case directory under `test-data/example2` might have these files:
 //!
 //! - `input` with content `this is the input`
 //! - `underscores` with the content `this_is_the_input`
@@ -86,15 +86,32 @@
 //!
 //! Then two different criterion functions might test different conversions of the same inputs:
 //!
-//! ```ignore
-//! #[test_vectors(dir = "test-data")]
-//! fn replace_spaces_with_underscores(input: &[u8], underscores: &[u8]) {
-//!     todo!()
+//! ```
+//! use test_vectors::test_vectors;
+//! use std::str::Utf8Error;
+//!
+//! #[test_vectors(
+//! # doctest = true,
+//!   dir = "test-data/example2"
+//! )]
+//! fn replace_spaces_with_underscores(input: &[u8], underscores: &[u8]) -> Result<(), Utf8Error> {
+//!     let instr = std::str::from_utf8(input)?;
+//!     let expstr = std::str::from_utf8(underscores)?;
+//!     let output = instr.replace(' ', "_");
+//!     assert_eq!(expstr, &output);
+//!     Ok(())
 //! }
 //!
-//! #[test_vectors(dir = "test-data")]
-//! fn elide_spaces(input: &[u8], elided: &[u8]) {
-//!     todo!()
+//! #[test_vectors(
+//! # doctest = true,
+//!   dir = "test-data/example2"
+//! )]
+//! fn elide_spaces(input: &[u8], elided: &[u8]) -> Result<(), Utf8Error> {
+//!     let instr = std::str::from_utf8(input)?;
+//!     let expstr = std::str::from_utf8(elided)?;
+//!     let output = instr.replace(' ', "");
+//!     assert_eq!(expstr, &output);
+//!     Ok(())
 //! }
 //! ```
 //!
