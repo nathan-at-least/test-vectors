@@ -149,56 +149,45 @@
 //!
 //! You could implement a newtype that performs the conversion for you:
 //!
-//! ```ignore
-//! use my_crate::MyType;
+//! ```
+//! use serde::Deserialize;
 //! use test_vectors::test_vectors;
 //!
-//! struct MyTypeFromJson(MyType);
+//! #[derive(Deserialize)]
+//! struct AppType {
+//!     valid: bool
+//! }
 //!
-//! impl TryFrom<&[u8]> for MyTypeFromJson {
-//!     type Error = serde_json::Error;
-//!
-//!     fn try_from(input: &[u8]) -> Result<Self, Self::Error> {
-//!         serde_json::from_slice(input)
+//! impl AppType {
+//!     fn is_valid(&self) -> bool {
+//!         self.valid
 //!     }
 //! }
 //!
-//! #[test_vectors(dir = "my-test-vectors")]
-//! fn validate(wrapper: MyTypeFromJson) {
-//!     let value: MyType = wrapper.0;
+//! struct AppTypeFromJson(AppType);
 //!
-//!     // Perform test-logic on `value`:
-//!     assert!(value.is_valid());
-//! }
-//! ```
-//!
-//! Depending on your test logic, you can make the results more ergonomic by implementing other
-//! traits, such as [std::ops::Deref]:
-//!
-//! ```ignore
-//! use my_crate::MyType;
-//! use test_vectors::test_vectors;
-//!
-//! struct MyTypeFromJson(MyType);
-//!
-//! impl std::ops::Deref for MyTypeFromJson {
-//!     type Target = MyType;
+//! impl std::ops::Deref for AppTypeFromJson {
+//!     type Target = AppType;
 //!
 //!     fn deref(&self) -> &Self::Target {
 //!         &self.0
 //!     }
 //! }
 //!
-//! impl TryFrom<&[u8]> for MyTypeFromJson {
+//! impl TryFrom<&[u8]> for AppTypeFromJson
+//! {
 //!     type Error = serde_json::Error;
 //!
 //!     fn try_from(input: &[u8]) -> Result<Self, Self::Error> {
-//!         serde_json::from_slice(input)
+//!         serde_json::from_slice(input).map(AppTypeFromJson)
 //!     }
 //! }
 //!
-//! #[test_vectors(dir = "my-test-vectors")]
-//! fn validate_ergonomically(value: MyTypeFromJson) {
+//! #[test_vectors(
+//! # doctest = true,
+//!   dir = "test-data/example3"
+//! )]
+//! fn validate(value: AppTypeFromJson) {
 //!     // Perform test-logic on `value`:
 //!     assert!(value.is_valid());
 //! }
