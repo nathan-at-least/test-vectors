@@ -21,3 +21,6 @@ version = "1.0.103"
 features = [
   "full",
 ]
+
+[dev-dependencies]
+target-test-dir = "0.2.0"
