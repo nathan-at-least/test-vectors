@@ -6,11 +6,15 @@ use std::path::PathBuf;
 #[derive(Debug)]
 pub(crate) struct MacroParams {
     pub(crate) dir: PathBuf,
+    pub(crate) doctest: bool,
 }
 
 #[derive(Debug, FromMeta)]
 struct RawMacroParams {
     dir: String,
+
+    #[darling(default)]
+    doctest: bool,
 }
 
 impl MacroParams {
@@ -34,7 +38,10 @@ impl MacroParams {
 
         let dir = Path::new(&manifestdir).join(raw.dir);
 
-        Ok(MacroParams { dir })
+        Ok(MacroParams {
+            dir,
+            doctest: raw.doctest,
+        })
     }
 }
 

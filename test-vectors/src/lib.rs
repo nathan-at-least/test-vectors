@@ -8,40 +8,53 @@
 //!
 //! # Example
 //!
-//! Suppose a crate includes the following contents:
+//! Suppose we have a fancy-dancy crate which can replace spaces with hyphens in a string, and we
+//! want to test that functionality against a bunch of input vector files.
+//!
+//! We can organize the crate contents like this:
 //!
 //! - `Cargo.toml` - depending on [test-vectors](crate) in `[dev-dependencies]`
 //! - `src/lib.rs` - containing the example code below
-//! - `test-data/alpha/input` - containing `this is alpha`
-//! - `test-data/alpha/expected` - containing `this_is_alpha`
-//! - `test-data/beta/input` - containing `this is beta`
-//! - `test-data/beta/expected` - containing `this_is_beta`
+//! - `test-data/example1/alpha/input` - containing `this is alpha`
+//! - `test-data/example1/alpha/expected` - containing `this_is_alpha`
+//! - `test-data/example1/beta/input` - containing `this is beta`
+//! - `test-data/example1/beta/expected` - containing `this_is_beta`
 //!
-//! A test criterion function for replacing spaces with hyphens could be written like this:
+//! Now in our `lib.rs` we have:
 //!
 //! ```
-//! use std::str::Utf8Error;
-//! use test_vectors::test_vectors;
+//! pub fn replace_spaces_with_underscores(input: &str) -> String {
+//!     input.replace(' ', "_")
+//! }
 //!
-//! #[test_vectors(dir = "test-data")]
-//! fn replace_spaces_with_underscore(input: &[u8], expected: &[u8]) -> Result<(), Utf8Error> {
+//! #[test_vectors::test_vectors(
+//! # doctest = true,
+//!   dir = "test-data/example1"
+//! )]
+//! fn test_replace(input: &[u8], expected: &[u8]) -> Result<(), std::str::Utf8Error> {
+//!     // Test setup:
 //!     let instr = std::str::from_utf8(input)?;
 //!     let expstr = std::str::from_utf8(expected)?;
-//!     let output = instr.replace(' ', "_");
+//!
+//!     // Application code test target:
+//!     let output = replace_spaces_with_underscores(instr);
+//!
+//!     // Test verification:
 //!     assert_eq!(expstr, &output);
+//!
 //!     Ok(())
 //! }
 //! ```
 //!
 //! This creates two rust unit tests from the case directories inside the corpus directory
-//! `test-data`. The cases are named after the case directories `alpha` and `beta`. For each
-//! test, the file contents of the `input` and `expected` files in the case directory are
-//! mapped to the `&[u8]` test criterion function arguments. The output of `cargo test` will
-//! include something like this:
+//! `test-data/example1`. The cases are named after the case directories `alpha` and
+//! `beta`. For each test, the file contents of the `input` and `expected` files in the case
+//! directory are mapped to the `&[u8]` test criterion function arguments. The output of `cargo
+//! test` will include something like this:
 //!
 //! ```text
-//! test replace_spaces_with_underscore_alpha ... ok
-//! test replace_spaces_with_underscore_beta ... ok
+//! test test_replace_alpha ... ok
+//! test test_replace_beta ... ok
 //! ```
 //!
 //! # Motivations
@@ -56,26 +69,29 @@
 //!   representations. This can help avoid divergence between live production data versus rust
 //!   literal representations aimed at representing the data.
 //! - Test against external files, which facilitates _conformance testing_
-//!   of multiple implementations against a common set of test vectors. For example, a file format
-//!   standard may include a set of test vectors which multiple implementations validate against.
+//!   of multiple implementations against a common set of test vectors. For example, a network
+//!   protocol standard may include a set of message serialization test
+//!   vectors which multiple implementations validate against.
 //! - Use other external tools on the external data files. For example,
 //!   if a video codec metadata parsing library has external test vector files, other tools for
-//!   examining that video format can be used directly on the test vectors.
+//!   examining that video format, such as interactive video players, can be used directly
+//!   on the test vectors.
 //!
 //! # Corpus and Case Directories
 //!
 //! The corpus directory is specified by the `dir` macro argument. This is a path relative to the
 //! `CARGO_MANIFEST_DIR` environment variable (which is where the crates `Cargo.toml` lives).
 //!
-//! Every directory inside a corpus directory is expected to be a case directory. Non-directories
-//! are ignored, and it's good practice to have a `README.md` file explaining the corpus.
+//! Every directory inside a corpus directory is expected to be a case directory (after
+//! traversing symlinks). Non-directories are ignored, and it's good practice to have a `README.md`
+//! file explaining the corpus.
 //!
 //! Inside a case directory, only the paths derived from the criterion function argument names are
 //! accessed, and other contents are ignored, so a good practice is a `README.md` explaining
 //! the intention of the case. Another nuance of this behavior is that different criterion
 //! functions might reuse the same corpus directory.
 //!
-//! For example, a case directory might have these files:
+//! For example, a case directory under `test-data/example2` might have these files:
 //!
 //! - `input` with content `this is the input`
 //! - `underscores` with the content `this_is_the_input`
@@ -83,17 +99,38 @@
 //!
 //! Then two different criterion functions might test different conversions of the same inputs:
 //!
-//! ```ignore
-//! #[test_vectors(dir = "test-data")]
-//! fn replace_spaces_with_underscores(input: &[u8], underscores: &[u8]) {
-//!     todo!()
+//! ```
+//! use test_vectors::test_vectors;
+//! use std::str::Utf8Error;
+//!
+//! #[test_vectors(
+//! # doctest = true,
+//!   dir = "test-data/example2"
+//! )]
+//! fn replace_spaces_with_underscores(input: &[u8], underscores: &[u8]) -> Result<(), Utf8Error> {
+//!     let instr = std::str::from_utf8(input)?;
+//!     let expstr = std::str::from_utf8(underscores)?;
+//!     let output = instr.replace(' ', "_");
+//!     assert_eq!(expstr, &output);
+//!     Ok(())
 //! }
 //!
-//! #[test_vectors(dir = "test-data")]
-//! fn elide_spaces(input: &[u8], elided: &[u8]) {
-//!     todo!()
+//! #[test_vectors(
+//! # doctest = true,
+//!   dir = "test-data/example2"
+//! )]
+//! fn elide_spaces(input: &[u8], elided: &[u8]) -> Result<(), Utf8Error> {
+//!     let instr = std::str::from_utf8(input)?;
+//!     let expstr = std::str::from_utf8(elided)?;
+//!     let output = instr.replace(' ', "");
+//!     assert_eq!(expstr, &output);
+//!     Ok(())
 //! }
 //! ```
+//!
+//! Since both criterion functions use the same corpus and both take `input`, they are testing
+//! against the same test vector `input` files, while each function reads a different test vector
+//! for its specific functionality, ie `underscores` vs `elided`.
 //!
 //! # Automatic Input Conversion From Bytes
 //!
@@ -129,56 +166,45 @@
 //!
 //! You could implement a newtype that performs the conversion for you:
 //!
-//! ```ignore
-//! use my_crate::MyType;
+//! ```
+//! use serde::Deserialize;
 //! use test_vectors::test_vectors;
 //!
-//! struct MyTypeFromJson(MyType);
+//! #[derive(Deserialize)]
+//! struct AppType {
+//!     valid: bool
+//! }
 //!
-//! impl TryFrom<&[u8]> for MyTypeFromJson {
-//!     type Error = serde_json::Error;
-//!
-//!     fn try_from(input: &[u8]) -> Result<Self, Self::Error> {
-//!         serde_json::from_slice(input)
+//! impl AppType {
+//!     fn is_valid(&self) -> bool {
+//!         self.valid
 //!     }
 //! }
 //!
-//! #[test_vectors(dir = "my-test-vectors")]
-//! fn validate(wrapper: MyTypeFromJson) {
-//!     let value: MyType = wrapper.0;
+//! struct AppTypeFromJson(AppType);
 //!
-//!     // Perform test-logic on `value`:
-//!     assert!(value.is_valid());
-//! }
-//! ```
-//!
-//! Depending on your test logic, you can make the results more ergonomic by implementing other
-//! traits, such as [std::ops::Deref]:
-//!
-//! ```ignore
-//! use my_crate::MyType;
-//! use test_vectors::test_vectors;
-//!
-//! struct MyTypeFromJson(MyType);
-//!
-//! impl std::ops::Deref for MyTypeFromJson {
-//!     type Target = MyType;
+//! impl std::ops::Deref for AppTypeFromJson {
+//!     type Target = AppType;
 //!
 //!     fn deref(&self) -> &Self::Target {
 //!         &self.0
 //!     }
 //! }
 //!
-//! impl TryFrom<&[u8]> for MyTypeFromJson {
+//! impl TryFrom<&[u8]> for AppTypeFromJson
+//! {
 //!     type Error = serde_json::Error;
 //!
 //!     fn try_from(input: &[u8]) -> Result<Self, Self::Error> {
-//!         serde_json::from_slice(input)
+//!         serde_json::from_slice(input).map(AppTypeFromJson)
 //!     }
 //! }
 //!
-//! #[test_vectors(dir = "my-test-vectors")]
-//! fn validate_ergonomically(value: MyTypeFromJson) {
+//! #[test_vectors(
+//! # doctest = true,
+//!   dir = "test-data/example3"
+//! )]
+//! fn validate(value: AppTypeFromJson) {
 //!     // Perform test-logic on `value`:
 //!     assert!(value.is_valid());
 //! }
