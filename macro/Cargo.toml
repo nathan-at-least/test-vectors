@@ -2,6 +2,7 @@
 name = "test-vectors-macro"
 version = "0.1.0"
 edition = "2021"
+description = "A proc macro to support the test-vectors crate"
 license-file = "LICENSE"
 repository = "https://github.com/nathan-at-least/test-vectors"
 
